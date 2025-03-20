@@ -118,7 +118,7 @@ WSGI_APPLICATION = "backend.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": BASE_DIR / "db",
+        "NAME": "db",
         "USER": "root",
         "PASSWORD": "mysql.root@binins",
         "HOST": 'localhost',
@@ -127,7 +127,7 @@ DATABASES = {
 
     "message_api_db": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": BASE_DIR / "message_api",
+        "NAME": "message_api",
         "USER": "root",
         "PASSWORD": "mysql.root@binins",
         "HOST": 'localhost',
@@ -136,7 +136,7 @@ DATABASES = {
 
     "inventory_management_db": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": BASE_DIR / "inventory_management",
+        "NAME": "inventory_management",
         "USER": "root",
         "PASSWORD": "mysql.root@binins",
         "HOST": 'localhost',
@@ -145,7 +145,7 @@ DATABASES = {
 
     "real_estate_db": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": BASE_DIR / "real_estate",
+        "NAME": "real_estate",
         "USER": "root",
         "PASSWORD": "mysql.root@binins",
         "HOST": 'localhost',
