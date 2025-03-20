@@ -117,23 +117,39 @@ WSGI_APPLICATION = "backend.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": BASE_DIR / "db",
+        "USER": "root",
+        "PASSWORD": "mysql.root@binins",
+        "HOST": 'localhost',
+        "PORT": ''
     },
 
     "message_api_db": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "message_api.sqlite3"
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": BASE_DIR / "message_api",
+        "USER": "root",
+        "PASSWORD": "mysql.root@binins",
+        "HOST": 'localhost',
+        "PORT": ''
     },
 
     "inventory_management_db": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "inventory_management.sqlite3"
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": BASE_DIR / "inventory_management",
+        "USER": "root",
+        "PASSWORD": "mysql.root@binins",
+        "HOST": 'localhost',
+        "PORT": ''
     },
 
     "real_estate_db": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "real_estate.sqlite3"
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": BASE_DIR / "real_estate",
+        "USER": "root",
+        "PASSWORD": "mysql.root@binins",
+        "HOST": 'localhost',
+        "PORT": ''
     }
 }
 
