@@ -1,0 +1,44 @@
+# Python bytecode files
+*.pyc
+*.pyo
+__pycache__/
+
+# Virtual environment folders
+venv/
+env/
+.virtualenv/
+
+# Django-specific
+db.sqlite3
+db
+inventory_management.sqlite3
+inventory_management
+real_estate.sqlite3
+real_estate
+message_api.sqlite3
+message_api
+*.pot
+*.log
+
+# Media and static files
+media
+/staticfiles/
+static/
+API_MEDIA
+products
+
+
+# IDE and editor files
+.idea/
+
+# Migrations (optional)
+**/migrations/__pycache__/
+**/migrations/*.pyc
+
+
+# created files
+folder-structure.md
+schema.yml
+
+
+backend/settings.py
