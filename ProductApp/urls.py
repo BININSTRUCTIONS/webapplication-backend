@@ -8,4 +8,6 @@ urlpatterns = [
     path("saas-product/plans/get", views.get_plan_for_saas_product),
     path("saas-product/plans/activate", views.activate_plan),
     path("saas-product/plans/activated/get", views.get_activated_plans),
+    path("payment-status/notify", views.handle_payment_notification),
+    path("payment-status/notifications/get", views.get_payment_notifications),
 ]

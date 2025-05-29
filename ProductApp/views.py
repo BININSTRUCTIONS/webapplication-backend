@@ -13,7 +13,26 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from api.models import ProductOrder, Customer, CustomersHavePlans
 
-from ProductApp.models import CompanyProduct
+from ProductApp.models import CompanyProduct, PaymentNotificationDetail
+import json
+
+def handle_payment_notification(request):
+    data = request.POST
+    json_data = json.dumps(data)
+    payment_notification_detail = PaymentNotificationDetail.objects.create(information=json_data)
+    
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@authentication_classes([JWTAuthentication])
+def get_payment_notifications(request):
+    payment_notifications = PaymentNotificationDetail.object.all()
+    information = []
+    for notification in payment_notifications:
+        information.append(notification.information)
+    
+    return Response({"notificationInformation": information})
 
 # Create your views here.
 def download_file(request):
@@ -181,9 +200,9 @@ def activate_plan(request):
                             date=datetime.now())
                         
                         payment_data["merchant_id"] = settings.PAYHERE_MERCHANT_ID
-                        payment_data["return_url"] = None
+                        payment_data["return_url"] = "http://localhost/payment-status"
                         payment_data["cancel_url"] = None
-                        payment_data["notify_url"] = "http://sample.com/notify"
+                        payment_data["notify_url"] = "http://bininstructions.com/api/v1/product/payment-status/notify"
                         payment_data["first_name"] = request.user.first_name
                         payment_data["last_name"] = request.user.last_name
                         payment_data["email"] = request.user.email

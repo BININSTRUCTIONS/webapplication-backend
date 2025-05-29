@@ -23,3 +23,8 @@ class SubscriptionPlanItem(models.Model):
     id = models.AutoField(primary_key=True)
     item = models.CharField(max_length=50)
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.CASCADE)
+
+
+class PaymentNotificationDetail(models.Model):
+    id = models.AutoField(primary_key=True)
+    information = models.TextField(null=True, blank=True)
