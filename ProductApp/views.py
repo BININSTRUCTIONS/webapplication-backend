@@ -208,9 +208,9 @@ def activate_plan(request):
                             date=datetime.now())
                         
                         payment_data["merchant_id"] = settings.PAYHERE_MERCHANT_ID
-                        payment_data["return_url"] = "http://localhost/payment-status"
-                        payment_data["cancel_url"] = None
-                        payment_data["notify_url"] = "http://api.bininstructions.com/api/v1/product/payment-status/notify"
+                        payment_data["return_url"] = "https://www.bininstructions.com/payment-status"
+                        payment_data["cancel_url"] = "https://www.bininstructions.com/payment-canceled"
+                        payment_data["notify_url"] = "https://api.bininstructions.com/api/v1/product/payment-status/notify"
                         payment_data["first_name"] = request.user.first_name
                         payment_data["last_name"] = request.user.last_name
                         payment_data["email"] = request.user.email
