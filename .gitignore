@@ -27,6 +27,7 @@ static/
 API_MEDIA
 products
 
+payment-notification.json
 
 # IDE and editor files
 .idea/
