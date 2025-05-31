@@ -22,8 +22,8 @@ import json
 def handle_payment_notification(request):
     data = request.POST
     json_data = json.dumps(data)
-    print(dir(request))
-    print(json_data)
+    # print(dir(request))
+    # print(json_data)
     payment_notification_detail = PaymentNotificationDetail.objects.create(information=json_data)
     if payment_notification_detail is not None:
         return JsonResponse({'status': 'ok', 'message': 'Request processed successfully.'}, status=200)
