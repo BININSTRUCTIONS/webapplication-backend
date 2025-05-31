@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http.response import FileResponse, JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 import os
 from datetime import datetime
 import hashlib
@@ -17,6 +18,7 @@ from ProductApp.models import CompanyProduct, PaymentNotificationDetail
 import json
 
 
+@csrf_excempt
 def handle_payment_notification(request):
     data = request.POST
     json_data = json.dumps(data)
