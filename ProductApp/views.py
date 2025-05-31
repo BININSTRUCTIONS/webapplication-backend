@@ -18,7 +18,7 @@ from ProductApp.models import CompanyProduct, PaymentNotificationDetail
 import json
 
 
-@csrf_excempt
+@csrf_exempt
 def handle_payment_notification(request):
     data = request.POST
     json_data = json.dumps(data)
