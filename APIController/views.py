@@ -79,7 +79,10 @@ def get_api_keys(request):
             for key in api_keys:
                 keys_information.append({
                     "id": key.id,
-                    "key": key.api_key
+                    "key": key.api_key,
+                    "last_used": key.last_used,
+                    "remaining_requests": key.remaining_requests,
+                    "requests_made": key.requests_made,
                 })
             response["keysInformation"] = keys_information
             response["status"] = "ok"
@@ -87,61 +90,3 @@ def get_api_keys(request):
         pass
     # print(response)
     return Response(response)
-
-
-
-@csrf_exempt
-@key_manager_api_authentication
-def get_key_manager_key_information(request):
-    response = {"status": "failed"}
-    data = request.POST
-    print(data)
-    try:
-        digital_key = DigitalKey.objects.get(key=data["key"])
-        response["keyInformation"] = {
-            "id": digital_key.id,
-            "maxActivations": digital_key.max_activations,
-            "currentActivations": digital_key.current_activations,
-            "isActive": digital_key.is_active,
-        }
-        response["status"] = "ok"
-    except:
-        response["message"] = "Invalid key provided"
-    print("Called get key state function")
-    return JsonResponse(response)
-
-
-@csrf_exempt
-@key_manager_api_authentication
-def activate_key(request):
-    response = {"status": "failed"}
-    data = request.POST
-    print(data)
-    try:
-        digital_key = DigitalKey.objects.get(key=data["key"])
-        if digital_key.current_activations < digital_key.max_activations:
-            digital_key.current_activations = digital_key.current_activations + 1
-            response["status"] = "ok"
-        else:
-            response["message"] = "Maximum activation count reached. cannot use this key for activating. deactivate one usage of the key or increase the number of activations for the key"
-    except:
-        response["message"] = "Invalid key provided"
-    print("Called get key state function")
-    return JsonResponse(response)
-
-
-@csrf_exempt
-@key_manager_api_authentication
-def mark_key_as_active(request):
-    response = {"status": "failed"}
-    data = request.POST
-    print(data)
-    try:
-        digital_key = DigitalKey.objects.get(key=data["key"])
-        digital_key.is_active = data["isActive"]
-        digital_key.save()
-        response["status"] = "ok"
-    except:
-        response["message"] = "Invalid key provided"
-    print("Called get key state function")
-    return JsonResponse(response)

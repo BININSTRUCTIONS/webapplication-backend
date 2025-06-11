@@ -1,6 +1,9 @@
 from django.db import models
 from APIs.models import APIInfo
 
+from django.contrib.auth.models import User
+from api.models import Customer
+
 # Create your models here.
 class CompanyProduct(models.Model):
     id = models.AutoField(primary_key=True)
@@ -23,6 +26,18 @@ class SubscriptionPlanItem(models.Model):
     id = models.AutoField(primary_key=True)
     item = models.CharField(max_length=50)
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.CASCADE)
+
+
+class Invoice(models.Model):
+    id = models.AutoField(primary_key=True)
+    order_id = models.CharField(max_length=255)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    items = models.CharField(max_length=255)
+    currency = models.CharField(max_length=4)
+    recurrence = models.CharField(max_length=50)
+    duration = models.CharField(max_length=100)
+    amount = models.BigIntegerField(default=0)
 
 
 class PaymentNotificationDetail(models.Model):

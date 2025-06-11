@@ -370,6 +370,15 @@ def get_user_information(request):
 
     response["orderInformation"] = order_information
     response["projectInformation"] = project_information
+
+    accountInformation = {
+        "firstName": user.first_name,
+        "lastName": user.last_name,
+        "username": user.username,
+        "email": user.email
+    }
+
+    response["accountInformation"] = accountInformation
     
     return Response(response)
 
@@ -1797,6 +1806,59 @@ def get_subscribed_apis(request):
     response = {"status": "failed"}
     user = request.user
     if user is not None:
+        pass
+    return Response(response)
+
+@api_view(["GET"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def get_payment_receipts(request):
+    response = {"status": "failed"}
+    try:
+        customer = request.user.customer
+
+        payment_receipts = PaymentReceipt.objects.filter(customer=customer)
+        
+        receipts = []
+        for receipt in payment_receipts:
+            status = ""
+            if receipt.status_code == 2:
+                status = "success"
+            elif receipt.status_code == 0:
+                status = "pending"
+            elif receipt.status_code == -1:
+                status = "canceled"
+            elif receipt.status_code == -2:
+                status = "failed"
+            elif receipt.status_code == -3:
+                status = "chargedback"
+
+            receipts.append({
+                "id": receipt.id,
+                "order_id": receipt.order_id,
+                "captured_amount": receipt.captured_amount,
+                "payhere_amount": receipt.payhere_amount,
+                "status_message": receipt.status_message,
+                "status": status,
+                "method": receipt.method,
+                "message_type": receipt.message_type,
+                "first_name": receipt.customer.user.first_name,
+                "last_name": receipt.customer.user.last_name,
+                "email": receipt.customer.user.email,
+                "phone": receipt.phone,
+                "address": receipt.address,
+                "city": receipt.city,
+                "country": receipt.country,
+                "items": receipt.items,
+                "currency": receipt.currency,
+                "duration": receipt.duration,
+                "amount": receipt.amount
+            })
+
+        response["receipts"] = receipts
+        response["status"] = "ok"
+    except Exception as e:
+        print(e)
         pass
     return Response(response)
 

@@ -25,6 +25,7 @@ admin.site.register(
         AccountType,
         PricePlan,
         CustomersHavePlans,
+        PaymentReceipt
     ]
 )
 

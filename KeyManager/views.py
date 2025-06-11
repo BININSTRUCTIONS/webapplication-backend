@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 from django.http import FileResponse, JsonResponse
 from rest_framework.response import Response
 from rest_framework.decorators import (
@@ -21,7 +22,8 @@ import hashlib
 
 from django.conf import settings
 from ProductApp.models import *
-from api.models import Customer, CustomersHavePlans
+from api.models import Customer, CustomersHavePlans, PaymentReceipt
+from APIController.utils.decorators import key_manager_api_authentication
 
 
 
@@ -164,70 +166,85 @@ def get_key_data(request):
     return Response(response)
 
 
+
+# This view is outdated
 @api_view(["POST"])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def activate_plan(request):
     response = {"status": "failed"}
-    data = request.data
-    try:
-        product_id = data["productID"]
-        plan_id = data["planID"]
+    # data = request.data
+    # try:
+    #     product_id = data["productID"]
+    #     plan_id = data["planID"]
 
-        company_product = CompanyProduct.objects.get(id=product_id)
-        if company_product is not None:
-            try:
-                plan = company_product.subscriptionplan_set.get(id=plan_id)
-                print(plan)
+    #     company_product = CompanyProduct.objects.get(id=product_id)
+    #     if company_product is not None:
+    #         try:
+    #             plan = company_product.subscriptionplan_set.get(id=plan_id)
+    #             print(plan)
 
-                payment_data = {}
+    #             payment_data = {}
 
-                recurring_period = "Month"
-                if plan.term == "y":
-                    recurring_period = "Year"
+    #             recurring_period = "Month"
+    #             if plan.term == "y":
+    #                 recurring_period = "Year"
 
-                try:
-                    customer = Customer.objects.get(user=request.user)
+    #             try:
+    #                 customer = Customer.objects.get(user=request.user)
                     
-                    customer_has_plan = CustomersHavePlans.objects.create(
-                        customer=customer,
-                        plans=plan,
-                        date=datetime.datetime.now()
-                    )
-                except:
-                    pass
+    #                 customer_has_plan = CustomersHavePlans.objects.create(
+    #                     customer=customer,
+    #                     plans=plan,
+    #                     date=datetime.datetime.now()
+    #                 )
+    #             except Exception as e:
+    #                 print(e)
 
-                payment_data["merchant_id"] = settings.PAYHERE_MERCHANT_ID
-                payment_data["return_url"] = None
-                payment_data["cancel_url"] = None
-                payment_data["notify_url"] = "http://sample.com/notify"
-                payment_data["first_name"] = request.user.first_name
-                payment_data["last_name"] = request.user.last_name
-                payment_data["email"] = request.user.email
-                payment_data["phone"] = None
-                payment_data["address"] = None
-                payment_data["city"] = None
-                payment_data["country"] = None
-                payment_data["order_id"] = f"{company_product.id}-{plan.id}"
-                payment_data["items"] = company_product.name + " " + plan.name
-                payment_data["currency"] = "USD"
-                payment_data["recurrence"] = f"1 {recurring_period}"
-                payment_data["duration"] = "Forever"
-                payment_data["amount"] = plan.price
+    #             order_id = f"{company_product.id}-{plan.id}"
 
-                hash_string = settings.PAYHERE_MERCHANT_ID + f"{company_product.id}-{plan.id}" + ("%.2f" % plan.price) + "USD" + hashlib.md5(settings.PAYHERE_MERCHANT_SECRET.encode("UTF-8")).hexdigest().upper()
-                hash = hashlib.md5(hash_string.encode("UTF-8")).hexdigest().upper()
-                payment_data["hash"] = hash
-                response["paymentData"] = payment_data
-                response["status"] = "ok"
-                # print(dir(company_product))
-            except Exception as e_:
-                # print(e_)
-                pass
+    #             payment_data["merchant_id"] = settings.PAYHERE_MERCHANT_ID
+    #             payment_data["return_url"] = None
+    #             payment_data["cancel_url"] = None
+    #             payment_data["notify_url"] = "http://sample.com/notify"
+    #             payment_data["first_name"] = request.user.first_name
+    #             payment_data["last_name"] = request.user.last_name
+    #             payment_data["email"] = request.user.email
+    #             payment_data["phone"] = None
+    #             payment_data["address"] = None
+    #             payment_data["city"] = None
+    #             payment_data["country"] = None
+    #             payment_data["order_id"] = order_id
+    #             payment_data["items"] = company_product.name + " " + plan.name
+    #             payment_data["currency"] = "USD"
+    #             payment_data["recurrence"] = f"1 {recurring_period}"
+    #             payment_data["duration"] = "Forever"
+    #             payment_data["amount"] = plan.price
 
-    except Exception as e:
-        # print(e)
-        pass
+    #             payment_receipt = PaymentReceipt.objects.create(
+    #                 order_id=order_id,
+    #                 first_name=request.user.first_name,
+    #                 last_name=request.user.last_name,
+    #                 email=request.user.email,
+    #                 items=company_product.name + " " + plan.name,
+    #                 currency="USD",
+    #                 duration="Forever",
+    #                 amount=plan.price
+    #             )
+
+    #             hash_string = settings.PAYHERE_MERCHANT_ID + f"{company_product.id}-{plan.id}" + ("%.2f" % plan.price) + "USD" + hashlib.md5(settings.PAYHERE_MERCHANT_SECRET.encode("UTF-8")).hexdigest().upper()
+    #             hash = hashlib.md5(hash_string.encode("UTF-8")).hexdigest().upper()
+    #             payment_data["hash"] = hash
+    #             response["paymentData"] = payment_data
+    #             response["status"] = "ok"
+    #             print(dir(company_product))
+    #         except Exception as e_:
+    #             print(e_)
+    #             pass
+
+    # except Exception as e:
+    #     # print(e)
+    #     pass
     return Response(response)
 
 
@@ -248,3 +265,88 @@ def get_key_manager_data(request):
             response["planActivated"] = True
             response["status"] = "ok"
     return Response(response)
+
+
+
+@csrf_exempt
+@key_manager_api_authentication
+def get_key_manager_key_information(request):
+    response = {"status": "failed"}
+    data = request.POST
+    print(data)
+    try:
+        digital_key = DigitalKey.objects.get(key=data["key"])
+        response["keyInformation"] = {
+            "id": digital_key.id,
+            "maxActivations": digital_key.max_activations,
+            "currentActivations": digital_key.current_activations,
+            "isActive": digital_key.is_active,
+        }
+        response["status"] = "ok"
+    except:
+        response["message"] = "Invalid key provided"
+    print("Called get key state function")
+    return JsonResponse(response)
+
+
+"""
+Update the number of activations and activations left
+"""
+@csrf_exempt
+@key_manager_api_authentication
+def activate_key(request):
+    response = {"status": "failed"}
+    data = request.POST
+    print(data)
+    try:
+        digital_key = DigitalKey.objects.get(key=data["key"])
+        if digital_key.current_activations < digital_key.max_activations:
+            digital_key.current_activations = digital_key.current_activations + 1
+            response["status"] = "ok"
+        else:
+            response["message"] = "Maximum activation count reached. cannot use this key for activating. deactivate one usage of the key or increase the number of activations for the key"
+    except:
+        response["message"] = "Invalid key provided"
+    print("Called get key state function")
+    return JsonResponse(response)
+
+
+"""
+Mark the key as active. This function makes 
+the provided key able to use
+"""
+@csrf_exempt
+@key_manager_api_authentication
+def mark_key_as_active(request):
+    response = {"status": "failed"}
+    data = request.POST
+    print(data)
+    try:
+        digital_key = DigitalKey.objects.get(key=data["key"])
+        digital_key.is_active = data["isActive"]
+        digital_key.save()
+        response["status"] = "ok"
+    except:
+        response["message"] = "Invalid key provided"
+    print("Called get key state function")
+    return JsonResponse(response)
+
+
+
+"""
+Deletes the specified key
+"""
+@csrf_exempt
+@key_manager_api_authentication
+def delete_key(request):
+    response = {"status": "failed"}
+    data = request.POST
+    print(data)
+    try:
+        digital_key = DigitalKey.objects.get(key=data["key"])
+        digital_key.delete()
+        response["status"] = "ok"
+    except:
+        response["message"] = "Invalid key provided"
+    print("Called get key state function")
+    return JsonResponse(response)

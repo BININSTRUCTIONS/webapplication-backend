@@ -12,7 +12,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from api.models import ProductOrder, Customer, CustomersHavePlans
+from api.models import ProductOrder, Customer, CustomersHavePlans, PaymentReceipt
 
 from ProductApp.models import CompanyProduct, PaymentNotificationDetail
 import json
@@ -22,8 +22,19 @@ import json
 def handle_payment_notification(request):
     data = request.POST
     json_data = json.dumps(data)
-    # print(dir(request))
-    # print(json_data)
+    payment_receipt = PaymentReceipt.objects.get(order_id=data["order_id"])
+
+    if payment_receipt is not None:
+        payment_receipt.payment_id = data["payment_id"]
+        payment_receipt.captured_amount = data["captured_amount"]
+        payment_receipt.payhere_amount = data["payhere_amount"]
+        payment_receipt.status_message = data["status_message"]
+        payment_receipt.status_code = data["status_code"]
+        payment_receipt.method = data["method"]
+        payment_receipt.message_type = data["message_type"]
+        payment_receipt.subscription_id = data["subscription_id"]
+        payment_receipt.save()
+
     payment_notification_detail = PaymentNotificationDetail.objects.create(information=json_data)
     if payment_notification_detail is not None:
         return JsonResponse({'status': 'ok', 'message': 'Request processed successfully.'}, status=200)
@@ -209,6 +220,8 @@ def activate_plan(request):
                             plan=plan,
                             date=datetime.now())
                         
+                        order_id = f"{company_product.id}-{plan.id}-{request.user.email}"
+                        
                         payment_data["merchant_id"] = settings.PAYHERE_MERCHANT_ID
                         payment_data["return_url"] = "https://www.bininstructions.com/payment-status"
                         payment_data["cancel_url"] = "https://www.bininstructions.com/payment-canceled"
@@ -220,23 +233,33 @@ def activate_plan(request):
                         payment_data["address"] = None
                         payment_data["city"] = None
                         payment_data["country"] = None
-                        payment_data["order_id"] = f"{company_product.id}-{plan.id}-{request.user.email}"
+                        payment_data["order_id"] = order_id
                         payment_data["items"] = company_product.name + " " + plan.name
                         payment_data["currency"] = "USD"
                         payment_data["recurrence"] = f"1 {recurring_period}"
                         payment_data["duration"] = "Forever"
                         payment_data["amount"] = plan.price
 
-                        hash_string = settings.PAYHERE_MERCHANT_ID + f"{company_product.id}-{plan.id}-{request.user.email}" + ("%.2f" % plan.price) + "USD" + hashlib.md5(settings.PAYHERE_MERCHANT_SECRET.encode("UTF-8")).hexdigest().upper()
-                        hash = hashlib.md5(hash_string.encode("UTF-8")).hexdigest().upper()
-                        payment_data["hash"] = hash
+                        payment_receipt = PaymentReceipt.objects.create(
+                            order_id=order_id,
+                            items=company_product.name + " " + plan.name,
+                            currency="USD",
+                            duration="Forever",
+                            amount=plan.price,
+                            customer=customer
+                        )
 
-                        if plan.price >= 1:
-                            response["paymentData"] = payment_data
+                        if payment_receipt is not None:
+                            hash_string = settings.PAYHERE_MERCHANT_ID + f"{company_product.id}-{plan.id}-{request.user.email}" + ("%.2f" % plan.price) + "USD" + hashlib.md5(settings.PAYHERE_MERCHANT_SECRET.encode("UTF-8")).hexdigest().upper()
+                            hash = hashlib.md5(hash_string.encode("UTF-8")).hexdigest().upper()
+                            payment_data["hash"] = hash
 
-                        response["launchPayment"] = plan.price >= 1
-                        
-                        response["status"] = "ok"
+                            if plan.price >= 1:
+                                response["paymentData"] = payment_data
+
+                            response["launchPayment"] = plan.price >= 1
+                            
+                            response["status"] = "ok"
                 except Exception as exception:
                     print(exception)
                     pass

@@ -13,6 +13,7 @@ def key_manager_api_authentication(view_function):
     def wrapper(request, *args, **kwargs):
         auth_header = request.headers.get("Authorization")
         json_response = {}
+        # print(request.headers)
         if auth_header:
             try:
                 token = auth_header.split(' ')[1]
@@ -42,7 +43,8 @@ def key_manager_api_authentication(view_function):
 
                 request.user = api_key.customers_have_plans.customer.user
                 return view_function(request, *args, **kwargs)
-            except APIKey.DoesNotExist:
+            except APIKey.DoesNotExist as e:
+                # print(e)
                 json_response["message"] = "Invalid API key"
                 return JsonResponse(json_response)
     return wrapper

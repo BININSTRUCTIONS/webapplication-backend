@@ -256,3 +256,27 @@ class PasswordResetRequestEmailList(models.Model):
 class NewsletterSubscription(models.Model):
     id = models.AutoField(primary_key=True)
     email = models.EmailField()
+
+
+
+class PaymentReceipt(models.Model):
+    id = models.AutoField(primary_key=True)
+    order_id = models.CharField(max_length=100, null=True, blank=True)
+    payment_id = models.CharField(max_length=100, null=True, blank=True)
+    captured_amount = models.CharField(max_length=100, null=True, blank=True)
+    payhere_amount = models.CharField(max_length=100, null=True, blank=True)
+    status_message = models.CharField(max_length=100, null=True, blank=True)
+    status_code = models.CharField(max_length=1, null=True, blank=True)
+    method = models.CharField(max_length=100, null=True, blank=True)
+    message_type = models.CharField(max_length=100, null=True, blank=True)
+    subscription_id = models.CharField(max_length=100, null=True, blank=True)
+    phone = models.CharField(max_length=100, null=True, blank=True)
+    address = models.CharField(max_length=100, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    country = models.CharField(max_length=100, null=True, blank=True)
+    items = models.CharField(max_length=100, null=True, blank=True)
+    currency = models.CharField(max_length=100, null=True, blank=True)
+    duration = models.CharField(max_length=100, null=True, blank=True)
+    amount = models.CharField(max_length=100, null=True, blank=True)
+    date_of_payment = models.DateField(null=True)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True)

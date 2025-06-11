@@ -42,6 +42,7 @@ urlpatterns = [
     path("user/orders/license/keys/get/all", views.get_license_keys),
     path("user/orders/license/key/validate", views.validate_license),
     path("user/apis/subscribed", views.get_subscribed_apis),
+    path("user/payment-receipts/get", views.get_payment_receipts),
 
     path("products/get/all", views.get_all_products),
     path("product/download", views.download_file),
