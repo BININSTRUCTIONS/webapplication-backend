@@ -14,6 +14,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from api.models import ProductOrder, Customer, CustomersHavePlans, PaymentReceipt
 
+from datetime import datetime
+
 from ProductApp.models import CompanyProduct, PaymentNotificationDetail
 import json
 
@@ -220,7 +222,9 @@ def activate_plan(request):
                             plan=plan,
                             date=datetime.now())
                         
-                        order_id = f"{company_product.id}-{plan.id}-{request.user.email}"
+                        now = datetime.now()
+                        order_id = f"REC-{company_product.id}{plan.id}{now.year}{now.month}{now.day}{now.hour}{now.minute}{now.second}{now.microsecond}"
+                        print(order_id)
                         
                         payment_data["merchant_id"] = settings.PAYHERE_MERCHANT_ID
                         payment_data["return_url"] = "https://www.bininstructions.com/payment-status"
@@ -246,11 +250,12 @@ def activate_plan(request):
                             currency="USD",
                             duration="Forever",
                             amount=plan.price,
+                            date_of_payment=datetime.today(),
                             customer=customer
                         )
 
                         if payment_receipt is not None:
-                            hash_string = settings.PAYHERE_MERCHANT_ID + f"{company_product.id}-{plan.id}-{request.user.email}" + ("%.2f" % plan.price) + "USD" + hashlib.md5(settings.PAYHERE_MERCHANT_SECRET.encode("UTF-8")).hexdigest().upper()
+                            hash_string = settings.PAYHERE_MERCHANT_ID + f"{order_id}" + ("%.2f" % plan.price) + "USD" + hashlib.md5(settings.PAYHERE_MERCHANT_SECRET.encode("UTF-8")).hexdigest().upper()
                             hash = hashlib.md5(hash_string.encode("UTF-8")).hexdigest().upper()
                             payment_data["hash"] = hash
 

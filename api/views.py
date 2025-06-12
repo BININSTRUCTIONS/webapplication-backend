@@ -1852,6 +1852,7 @@ def get_payment_receipts(request):
                 "items": receipt.items,
                 "currency": receipt.currency,
                 "duration": receipt.duration,
+                "date": receipt.date_of_payment,
                 "amount": receipt.amount
             })
 
