@@ -41,22 +41,24 @@ import string
 def generate_key_manager_api_key(request):
     response = {"status": "failed"}
     key = ''.join(random.choices(string.ascii_letters + string.digits, k=200))
+    try:
+        user = request.user
+        customer = Customer.objects.get(user=user)
+        product = CompanyProduct.objects.get(id=1)
 
-    user = request.user
-    customer = Customer.objects.get(user=user)
-    product = CompanyProduct.objects.get(id=1)
+        customer_has_plan = CustomersHavePlans.objects.get(customer=customer, product=product)
 
-    customer_has_plan = CustomersHavePlans.objects.get(customer=customer, product=product)
+        if customer_has_plan:
+            api_key = APIKey.objects.create(
+                api_key=key,
+                customers_have_plans=customer_has_plan
+            )
 
-    if customer_has_plan:
-        api_key = APIKey.objects.create(
-            api_key=key,
-            customers_have_plans=customer_has_plan
-        )
-
-    if api_key is not None:
-        response["key"] = key
-        response["status"] = "ok"
+        if api_key is not None:
+            response["key"] = key
+            response["status"] = "ok"
+    except Exception as e:
+        print(e)
 
     return Response(response)
 

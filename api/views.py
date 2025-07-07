@@ -566,6 +566,7 @@ def set_plan_for_saas_product(request):
         term = data["term"]
         productID = data["productID"]
         is_recurring = data["is_recurring"]
+        isFree = data["isFree"]
 
         print(data)
 
@@ -576,7 +577,8 @@ def set_plan_for_saas_product(request):
                 price=price,
                 term=term,
                 product=saas_product,
-                is_recurring=is_recurring
+                is_recurring=is_recurring,
+                is_free=isFree
             )
 
             if plan is not None:
@@ -595,6 +597,32 @@ def set_plan_for_saas_product(request):
         print(e)
         pass
 
+    return Response(response)
+
+
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_plan_for_saas_product(request):
+    response = {"status": "failed"}
+    data = request.data
+    try:
+        productID = data["productID"]
+        planID = data["planID"]
+
+        print(data)
+
+        try:
+            saas_product = CompanyProduct.objects.get(id=productID)
+            plan = SubscriptionPlan.objects.get(id=planID)
+            plan.delete()
+            response["status"] = "ok"
+        except Exception as e_:
+            print(e_)
+            pass
+    except Exception as e:
+        print(e)
+        pass
     return Response(response)
 
 
@@ -1520,6 +1548,140 @@ def set_api_info_for_plan(request):
     return Response(response)
 
 
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAdminUser])
+def get_api_info_for_plan(request):
+    response = {"status": "failed"}
+    information = []
+
+    for product in CompanyProduct.objects.all():
+        information.append({
+            "id": product.id,
+            "name": product.name,
+            "description": product.description,
+            "date": product.date,
+            "plans": [
+                {
+                    "id": plan.id,
+                    "name": plan.name,
+                    "price": plan.price,
+                    "term": plan.term,
+                    "is_recurring": plan.is_recurring,
+                    "api_information": {
+                        "id": plan.api_information.id if plan.api_information != None else None,
+                        "calls_per_minute": plan.api_information.calls_per_minute if plan.api_information != None else 0
+                        }
+                } for plan in product.subscriptionplan_set.all() if plan != None
+            ]
+        })
+
+    response["status"] = "ok"
+    response["information"] = information
+    return Response(response)
+
+
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAdminUser])
+def update_product_plan_information(request):
+    response = {"status": "failed"}
+    data = request.data
+
+    try:
+        print(data)
+        productID = data["productID"]
+        planID = data["selectedPlanID"]
+
+        saas_product = CompanyProduct.objects.get(id=productID)
+        plan = SubscriptionPlan.objects.get(id=planID)
+
+        plan.product=saas_product
+
+        created_items = []
+
+        try:
+            name = data["name"]
+            plan.name=name
+        except:
+            pass
+
+        try:
+            price = data["price"]
+            plan.price=price
+        except:
+            pass
+
+        try:
+            term = data["term"]
+            plan.term=term
+        except:
+            pass
+
+        try:
+            is_recurring = data["is_recurring"]
+            plan.is_recurring=is_recurring
+        except:
+            pass
+
+        try:
+            is_free = data["isFree"]
+            plan.is_free=is_free
+        except:
+            pass
+
+        try:
+            items = data["newFeaturesToAdd"]
+            print(items)
+            itemsToDelete = data["featuresToDelete"]
+
+            if len(itemsToDelete) > 0:
+                for plan_item in plan.subscriptionplanitem_set.all():
+                    if itemsToDelete.__contains__(plan_item.id):
+                        plan_item.delete()
+
+            if plan is not None:
+                plan_items = plan.subscriptionplanitem_set.all()
+                for item in items:
+                    if len(plan_items) > 0:
+                        for plan_item in plan.subscriptionplanitem_set.all():
+                            # print(dir(item))
+                            if plan_item.item != item["content"]:
+                                plan_feature = SubscriptionPlanItem.objects.create(
+                                    item=item['content'],
+                                    plan=plan
+                                )
+
+                                created_items.append({
+                                    "id": plan_feature.id,
+                                    "item": plan_feature.item
+                                })
+                    else:
+                        plan_feature = SubscriptionPlanItem.objects.create(
+                            item=item['content'],
+                            plan=plan
+                        )
+
+                        created_items.append({
+                            "id": plan_feature.id,
+                            "item": plan_feature.item
+                        })
+                    print("plan edited successfully!")
+        except Exception as e:
+            print(e)
+            pass
+        plan.save()
+        response["status"] = "ok"
+        response["items"] = created_items
+    except Exception as e:
+        print(e)
+        pass
+
+    return Response(response)
+
+
+set_api_info_for_plan
+
 
 @api_view(["POST"])
 @authentication_classes([JWTAuthentication])
@@ -1948,5 +2110,52 @@ def subscribe_to_newsletter(request):
         pass
     return Response(response)
 
+
+
+@api_view(["GET"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAdminUser])
+def get_plan_upgrade_requests(request):
+    response = {"status": "failed"}
+    plan_upgrade_requests = []
+    for plan_upgrade_request in UpgradePlanRequest.objects.all():
+        plan_upgrade_requests.append({
+            "id": plan_upgrade_request.id,
+            "product": plan_upgrade_request.current_plan.product.name,
+            "targetProduct": plan_upgrade_request.subscription_plan.product.name,
+            "currentPlan": {
+                "id": plan_upgrade_request.current_plan.id,
+                "name": plan_upgrade_request.current_plan.name,
+                "price": plan_upgrade_request.current_plan.price
+            },
+            "subscriptionPlan": {
+                "id": plan_upgrade_request.subscription_plan.id,
+                "name": plan_upgrade_request.subscription_plan.name,
+                "price": plan_upgrade_request.subscription_plan.price
+            },
+            "user": plan_upgrade_request.user.first_name + ' ' + plan_upgrade_request.user.last_name,
+            "datetime": str(plan_upgrade_request.datetime)
+        })
+    response["requests"] = plan_upgrade_requests
+    response["status"] = "ok"
+    return Response(response)
+
+
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAdminUser])
+def approve_plan_upgrade_requests(request):
+    response = {"status": "failed", "message": ""}
+    data = request.data
+    try:
+        request_id = data["requestID"]
+        upgrade_request = UpgradePlanRequest.objects.get(id=request_id)
+        upgrade_request.delete()
+        response["status"] = "ok"
+    except Exception as e:
+        print(e)
+        response["message"] = "Error occurred while approving the request"
+        pass
+    return Response(response)
 
 

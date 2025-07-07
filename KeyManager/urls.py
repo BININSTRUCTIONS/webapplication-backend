@@ -5,7 +5,8 @@ urlpatterns = [
     path("get-keys", views.get_key_manager_keys),
     path("add-key", views.add_key_manager_key),
     path("change-key", views.change_key_manager_key),
-    path("plans/activate", views.activate_plan),
+
+    # path("plans/activate", views.activate_plan),
     path("data", views.get_key_manager_data),
 
 
@@ -14,6 +15,8 @@ urlpatterns = [
 
     # Increase the activation count. (Used time)
     path("activate-key", views.activate_key),
+
+    path("deactivate-key", views.deactivate_key),
 
     # Mark the key as active. (Valid to use)
     path("mark-key-as-active", views.mark_key_as_active),

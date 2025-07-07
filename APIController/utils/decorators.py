@@ -22,8 +22,10 @@ def key_manager_api_authentication(view_function):
                 last_used_time = api_key.last_used
 
                 current_time = timezone.now()
-                time_difference = current_time - last_used_time
-                difference_in_minutes = int(time_difference.total_seconds()) / 60
+                difference_in_minutes = 1
+                if last_used_time != None:
+                    time_difference = current_time - last_used_time
+                    difference_in_minutes = int(time_difference.total_seconds()) / 60
 
                 limited_calls = api_key.customers_have_plans.plan.api_information.calls_per_minute
 

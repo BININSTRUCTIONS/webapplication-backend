@@ -19,7 +19,16 @@ class SubscriptionPlan(models.Model):
     product = models.ForeignKey(CompanyProduct, on_delete=models.CASCADE)
     term = models.CharField(max_length=1, null=True, blank=True)
     is_recurring = models.BooleanField(default=False)
+    is_free = models.BooleanField(default=False)
     api_information = models.OneToOneField(APIInfo, on_delete=models.SET_NULL, null=True, blank=True)
+
+
+class UpgradePlanRequest(models.Model):
+    id = models.AutoField(primary_key=True)
+    current_plan = models.ForeignKey(SubscriptionPlan, related_name="current_plan", on_delete=models.CASCADE, null=True)
+    subscription_plan = models.ForeignKey(SubscriptionPlan, on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    datetime = models.DateTimeField(null=True, blank=True)
 
 
 class SubscriptionPlanItem(models.Model):

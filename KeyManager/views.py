@@ -25,6 +25,8 @@ from ProductApp.models import *
 from api.models import Customer, CustomersHavePlans, PaymentReceipt
 from APIController.utils.decorators import key_manager_api_authentication
 
+import json
+
 
 
 # Create your views here.
@@ -34,7 +36,8 @@ from APIController.utils.decorators import key_manager_api_authentication
 def get_key_manager_keys(request):
     response = {"status": "failed"}
     keys = []
-    for digital_key in DigitalKey.objects.all():
+    user = request.user
+    for digital_key in DigitalKey.objects.filter(user=user):
         keys.append({
             "id": digital_key.id,
             "key": digital_key.key,
@@ -64,24 +67,42 @@ def add_key_manager_key(request):
         username = user.username
 
         customer = Customer.objects.get(user=user)
-        print(customer)
-        print(dir(customer))
+        # print(customer)
+        # print(dir(customer))
         product = CompanyProduct.objects.get(id=1)
         plan = customer.customershaveplans_set.filter(product=product, customer=customer)
-        print(product)
-        print(plan)
+        # print(product)
+        # print(plan)
 
         generate_key = False
         keys = DigitalKey.objects.filter(user=user)
-        if plan[0].id == 1:
-            if len(keys) < 5:
-                generate_key = True
+        if len(plan) > 0:
+            # print("Plan ID: ", plan[0].plan.id)
+            # print("Number of keys: ", len(keys))
+            if plan[0].plan.id == 1:
+                if len(keys) < 10:
+                    generate_key = True
+                else:
+                    message = "You have generated maximum number of keys allowed. Upgrade your plan."
+            elif plan[0].plan.id == 2:
+                if len(keys) < 100:
+                    generate_key = True
+                else:
+                    message = "You have generated maximum number of keys allowed. Upgrade your plan."
+            elif plan[0].plan.id == 3:
+                if len(keys) < 500:
+                    generate_key = True
+                else:
+                    message = "You have generated maximum number of keys allowed. Upgrade your plan."
+            elif plan[0].plan.id == 4:
+                if len(keys) < 2000:
+                    generate_key = True
+                else:
+                    message = "You have generated maximum number of keys allowed. Upgrade your plan."
             else:
-                message = "You have generated maximum number of keys allowed. Upgrade your plan."
+                generate_key = True
         elif len(plan) == 0:
-            message = "you haven't subscribed to any plan. subscribe to the plan you want before generating any key"
-        else:
-            generate_key = True
+                message = "you haven't subscribed to any plan. subscribe to the plan you want before generating any key"
             
         if generate_key:
             # print(customer.customer_has_plan)
@@ -255,14 +276,39 @@ def get_key_manager_data(request):
     response = {"status": "failed"}
     user = request.user
     # print(dir(user))
+
+    user = request.user
     customer = user.customer
+    product = CompanyProduct.objects.get(id=1)
+    # print(product.name)
+    plan_info = {}
+    # if customer is not None:
+    #     customer_has_plans = customer.customershaveplans_set.get(product=product)
+    #     if customer_has_plans is not None:
     # print(dir(customer))
     if customer is not None:
-        plans = customer.subscription_plans.filter(product=2) # 2 is the id of the KeyManager product
+        plans = customer.customershaveplans_set.filter(product=product) # 1 is the id of the KeyManager product
         # print(dir(plans))
-        print(plans)
+        # print(plans)
         if len(plans) == 1:
+            plan = plans[0].plan
+            if plan is not None:
+                planName = plan.name
+                maxKeysAllowed = 10
+                if planName == "Starter Tier":
+                    maxKeysAllowed = 100
+                elif planName == "Pro Tier":
+                    maxKeysAllowed = 500
+                elif planName == "Scale Tier":
+                    maxKeysAllowed = 2000
+                elif planName == "Enterprise Tier":
+                    maxKeysAllowed = 0
+
+                plan_info["planName"] = plan.name
+                plan_info["maxKeysAllowed"] = maxKeysAllowed
             response["planActivated"] = True
+            response["planInfo"] = plan_info
+            # print(plan_info)
             response["status"] = "ok"
     return Response(response)
 
@@ -271,9 +317,12 @@ def get_key_manager_data(request):
 @csrf_exempt
 @key_manager_api_authentication
 def get_key_manager_key_information(request):
-    response = {"status": "failed"}
-    data = request.POST
-    print(data)
+    response = {"status": "failed", "message": ""}
+
+    data = {}
+    if request.method == "POST":
+        data = json.loads(request.body)
+    # print(data)
     try:
         digital_key = DigitalKey.objects.get(key=data["key"])
         response["keyInformation"] = {
@@ -283,9 +332,10 @@ def get_key_manager_key_information(request):
             "isActive": digital_key.is_active,
         }
         response["status"] = "ok"
-    except:
+    except Exception as e:
+        print(e)
         response["message"] = "Invalid key provided"
-    print("Called get key state function")
+    # print("Called get key state function")
     return JsonResponse(response)
 
 
@@ -295,19 +345,54 @@ Update the number of activations and activations left
 @csrf_exempt
 @key_manager_api_authentication
 def activate_key(request):
-    response = {"status": "failed"}
-    data = request.POST
-    print(data)
+    response = {"status": "failed", "message": ""}
+    data = {}
+    if request.method == "POST":
+        data = json.loads(request.body)
+    # print(data)
     try:
         digital_key = DigitalKey.objects.get(key=data["key"])
-        if digital_key.current_activations < digital_key.max_activations:
-            digital_key.current_activations = digital_key.current_activations + 1
-            response["status"] = "ok"
+        if digital_key.is_active:
+            if digital_key.current_activations < digital_key.max_activations:
+                digital_key.current_activations = digital_key.current_activations + 1
+                digital_key.save()
+                response["status"] = "ok"
+            else:
+                response["message"] = "Maximum activation count reached. cannot use this key for activating. deactivate one usage of the key or increase the number of activations for the key"
         else:
-            response["message"] = "Maximum activation count reached. cannot use this key for activating. deactivate one usage of the key or increase the number of activations for the key"
-    except:
+            response["message"] = "Key is inactive. activation cannot be done. enable this key before activation or deactivation"
+    except Exception as e:
+        print(e)
         response["message"] = "Invalid key provided"
-    print("Called get key state function")
+    # print("Called get key state function")
+    return JsonResponse(response)
+
+"""
+Update the number of activations and activations left
+"""
+@csrf_exempt
+@key_manager_api_authentication
+def deactivate_key(request):
+    response = {"status": "failed", "message": ""}
+    data = {}
+    if request.method == "POST":
+        data = json.loads(request.body)
+    # print(data)
+    try:
+        digital_key = DigitalKey.objects.get(key=data["key"])
+        if digital_key.is_active:
+            if digital_key.current_activations > 0:
+                digital_key.current_activations = digital_key.current_activations - 1
+                digital_key.save()
+                response["status"] = "ok"
+            else:
+                response["message"] = "Maximum deactivation limit reached."
+        else:
+            response["message"] = "Key is inactive. deactivation cannot be done. enable this key before deactivation or activation"
+    except Exception as e:
+        print(e)
+        response["message"] = "Invalid key provided"
+    # print("Called get key state function")
     return JsonResponse(response)
 
 
@@ -318,9 +403,12 @@ the provided key able to use
 @csrf_exempt
 @key_manager_api_authentication
 def mark_key_as_active(request):
-    response = {"status": "failed"}
-    data = request.POST
-    print(data)
+    response = {"status": "failed", "message": ""}
+
+    data = {}
+    if request.method == "POST":
+        data = json.loads(request.body)
+    # print(data)
     try:
         digital_key = DigitalKey.objects.get(key=data["key"])
         digital_key.is_active = data["isActive"]
@@ -328,7 +416,7 @@ def mark_key_as_active(request):
         response["status"] = "ok"
     except:
         response["message"] = "Invalid key provided"
-    print("Called get key state function")
+    # print("Called get key state function")
     return JsonResponse(response)
 
 
@@ -339,8 +427,10 @@ Deletes the specified key
 @csrf_exempt
 @key_manager_api_authentication
 def delete_key(request):
-    response = {"status": "failed"}
-    data = request.POST
+    response = {"status": "failed", "message": ""}
+    data = {}
+    if request.method == "POST":
+        data = json.loads(request.body)
     print(data)
     try:
         digital_key = DigitalKey.objects.get(key=data["key"])
