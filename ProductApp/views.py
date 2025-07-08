@@ -370,13 +370,13 @@ def activate_plan(request):
                             
                             response["status"] = "ok"
                 except Exception as exception:
-                    # print(exception)
+                    print(exception)
                     pass
 
                 
                 # print(dir(company_product))
             except Exception as e_:
-                # print(e_)
+                print(e_)
                 pass
 
     except Exception as e:
