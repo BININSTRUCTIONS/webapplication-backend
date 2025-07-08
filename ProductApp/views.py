@@ -320,7 +320,8 @@ def activate_plan(request):
                             response["message"] = "You already subscribed to a plan of this product. try upgrading in your profile dashboard."
                             # print(upgradeException)
                             pass
-                    except:
+                    except Exception as error:
+                        print(error)
                         customer_has_plan = CustomersHavePlans.objects.create(
                             customer=customer,
                             plan=plan,
@@ -382,7 +383,7 @@ def activate_plan(request):
                 pass
 
     except Exception as e:
-        # print(e)
+        print(e)
         pass
     return Response(response)
 
