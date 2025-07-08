@@ -244,6 +244,7 @@ def activate_plan(request):
                                     now = datetime.now()
                                     order_id = f"REC-{company_product.id}{plan.id}{now.year}{now.month}{now.day}{now.hour}{now.minute}{now.second}{now.microsecond}"
                                     # print(order_id)
+                                    payment_data["sandbox"] = False
                                     payment_data["merchant_id"] = settings.PAYHERE_MERCHANT_ID
                                     payment_data["return_url"] = "https://www.bininstructions.com/payment-status"
                                     payment_data["cancel_url"] = "https://www.bininstructions.com/payment-canceled"
@@ -330,6 +331,7 @@ def activate_plan(request):
                             now = datetime.now()
                             order_id = f"REC-{company_product.id}{plan.id}{now.year}{now.month}{now.day}{now.hour}{now.minute}{now.second}{now.microsecond}"
                             # print(order_id)
+                            payment_data["sandbox"] = False
                             payment_data["merchant_id"] = settings.PAYHERE_MERCHANT_ID
                             payment_data["return_url"] = "https://www.bininstructions.com/payment-status"
                             payment_data["cancel_url"] = "https://www.bininstructions.com/payment-canceled"
