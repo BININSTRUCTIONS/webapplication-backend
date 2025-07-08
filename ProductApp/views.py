@@ -215,7 +215,7 @@ def activate_plan(request):
                     maxKeysAllowed = 2000
                 elif planName == "Enterprise Tier":
                     maxKeysAllowed = 0
-                if number_of_license_keys_generated > maxKeysAllowed:
+                if len(number_of_license_keys_generated) > maxKeysAllowed:
                     response["status"] = "failed"
                     response["message"] = "You are trying to downgrade the subscription plan. but there are many keys generated than the limited key amount of the new plan. Delete keys generated before downgrading the plan."
                     return Response(response)
