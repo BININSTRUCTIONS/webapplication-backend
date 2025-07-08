@@ -259,8 +259,8 @@ def activate_plan(request):
                                     payment_data["order_id"] = order_id
                                     payment_data["items"] = company_product.name + " " + plan.name
                                     payment_data["currency"] = "USD"
-                                    payment_data["recurrence"] = f"1 {recurring_period}"
-                                    payment_data["duration"] = "Forever"
+                                    # payment_data["recurrence"] = f"1 {recurring_period}"
+                                    # payment_data["duration"] = "Forever"
                                     payment_data["amount"] = plan.price
 
                                     payment_receipt = PaymentReceipt.objects.create(
@@ -347,8 +347,8 @@ def activate_plan(request):
                             payment_data["order_id"] = order_id
                             payment_data["items"] = company_product.name + " " + plan.name
                             payment_data["currency"] = "USD"
-                            payment_data["recurrence"] = f"1 {recurring_period}"
-                            payment_data["duration"] = "Forever"
+                            # payment_data["recurrence"] = f"1 {recurring_period}"
+                            # payment_data["duration"] = "Forever"
                             payment_data["amount"] = plan.price
 
                             payment_receipt = PaymentReceipt.objects.create(
