@@ -35,7 +35,7 @@ def handle_payment_notification(request):
             payment_receipt.status_message = data["status_message"]
             payment_receipt.status_code = data["status_code"]
             payment_receipt.method = data["method"]
-            payment_receipt.message_type = data["message_type"]
+            # payment_receipt.message_type = data["message_type"]
             # payment_receipt.subscription_id = data["subscription_id"]
             payment_receipt.save()
 
