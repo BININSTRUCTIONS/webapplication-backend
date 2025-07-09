@@ -46,6 +46,7 @@ def handle_payment_notification(request):
             # Failed response
             return JsonResponse({'status': 'failed', 'message': 'Something went wrong.'}, status=400)
     except Exception as e:
+        print(e)
         return JsonResponse({'status': 'failed', 'message': 'Something went wrong.'}, status=400)
 
     
