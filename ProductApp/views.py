@@ -56,7 +56,8 @@ def handle_payment_notification(request):
                                                 subscription_plan=subscription_plan,
                                                 datetime=datetime.now()
                                             )
-                    except:
+                    except Exception as ex:
+                        print(ex)
                         customer_has_plan = CustomersHavePlans.objects.create(
                                     customer=payment_receipt.customer,
                                     plan=subscription_plan,
