@@ -2150,6 +2150,10 @@ def approve_plan_upgrade_requests(request):
     try:
         request_id = data["requestID"]
         upgrade_request = UpgradePlanRequest.objects.get(id=request_id)
+        customer = upgrade_request.user.customer
+        customer_has_plan = CustomersHavePlans.objects.get(customer=customer, plan=upgrade_request.current_plan)
+        customer_has_plan.plan = upgrade_request.subscription_plan
+        customer_has_plan.save()
         upgrade_request.delete()
         response["status"] = "ok"
     except Exception as e:
