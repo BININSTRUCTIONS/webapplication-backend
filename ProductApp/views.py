@@ -47,6 +47,7 @@ def handle_payment_notification(request):
                 payment_receipt.save()
 
                 try:
+                    print(payment_receipt.items.strip().split(" "))
                     (product, plan) = payment_receipt.items.strip().split(" ")
                     company_product = CompanyProduct.objects.get(name=product)
                     subscription_plan = company_product.subscriptionplan_set.get(name=plan, price=float(payment_receipt.amount))
