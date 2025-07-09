@@ -28,13 +28,13 @@ def handle_payment_notification(request):
         json_data = json.dumps(data)
         payment_receipt = PaymentReceipt.objects.get(order_id=data["order_id"])
 
-        print(data)
+        # print(data)
 
         if payment_receipt is not None:
             hash_string = settings.PAYHERE_MERCHANT_ID + f"{payment_receipt.order_id}" + data["payhere_amount"] + "USD" + data["status_code"] + hashlib.md5(settings.PAYHERE_MERCHANT_SECRET.encode("UTF-8")).hexdigest().upper()
             hash = hashlib.md5(hash_string.encode("UTF-8")).hexdigest().upper()
-            print(hash)
-            print(data["md5sig"])
+            # print(hash)
+            # print(data["md5sig"])
             if hash == data["md5sig"]:
                 payment_receipt.payment_id = data["payment_id"]
                 payment_receipt.captured_amount = data["captured_amount"]
@@ -47,7 +47,7 @@ def handle_payment_notification(request):
                 payment_receipt.save()
 
                 try:
-                    print(payment_receipt.items.strip().split("-"))
+                    # print(payment_receipt.items.strip().split("-"))
                     (product, plan) = payment_receipt.items.strip().split("-")
                     company_product = CompanyProduct.objects.get(name=product)
                     subscription_plan = company_product.subscriptionplan_set.get(name=plan, price=float(payment_receipt.amount))
@@ -61,14 +61,15 @@ def handle_payment_notification(request):
                                                 datetime=datetime.now()
                                             )
                     except Exception as ex:
-                        print(ex)
+                        # print(ex)
                         customer_has_plan = CustomersHavePlans.objects.create(
                                     customer=payment_receipt.customer,
                                     plan=subscription_plan,
                                     date=datetime.now(),
                                     product=company_product)
                 except Exception as exception:
-                    print(exception)
+                    # print(exception)
+                    pass
 
         payment_notification_detail = PaymentNotificationDetail.objects.create(information=json_data)
         if payment_notification_detail is not None:
@@ -77,7 +78,7 @@ def handle_payment_notification(request):
             # Failed response
             return JsonResponse({'status': 'failed', 'message': 'Something went wrong.'}, status=400)
     except Exception as e:
-        print(e)
+        # print(e)
         return JsonResponse({'status': 'failed', 'message': 'Something went wrong.'}, status=400)
 
     
