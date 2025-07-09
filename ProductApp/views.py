@@ -23,27 +23,31 @@ import json
 
 @csrf_exempt
 def handle_payment_notification(request):
-    data = request.POST
-    json_data = json.dumps(data)
-    payment_receipt = PaymentReceipt.objects.get(order_id=data["order_id"])
+    try:
+        data = request.POST
+        json_data = json.dumps(data)
+        payment_receipt = PaymentReceipt.objects.get(order_id=data["order_id"])
 
-    if payment_receipt is not None:
-        payment_receipt.payment_id = data["payment_id"]
-        payment_receipt.captured_amount = data["captured_amount"]
-        payment_receipt.payhere_amount = data["payhere_amount"]
-        payment_receipt.status_message = data["status_message"]
-        payment_receipt.status_code = data["status_code"]
-        payment_receipt.method = data["method"]
-        payment_receipt.message_type = data["message_type"]
-        payment_receipt.subscription_id = data["subscription_id"]
-        payment_receipt.save()
+        if payment_receipt is not None:
+            payment_receipt.payment_id = data["payment_id"]
+            payment_receipt.captured_amount = data["captured_amount"]
+            payment_receipt.payhere_amount = data["payhere_amount"]
+            payment_receipt.status_message = data["status_message"]
+            payment_receipt.status_code = data["status_code"]
+            payment_receipt.method = data["method"]
+            payment_receipt.message_type = data["message_type"]
+            # payment_receipt.subscription_id = data["subscription_id"]
+            payment_receipt.save()
 
-    payment_notification_detail = PaymentNotificationDetail.objects.create(information=json_data)
-    if payment_notification_detail is not None:
-        return JsonResponse({'status': 'ok', 'message': 'Request processed successfully.'}, status=200)
-    else:
-        # Failed response
-        return JsonResponse({'status': 'fail', 'message': 'Something went wrong.'}, status=400)
+        payment_notification_detail = PaymentNotificationDetail.objects.create(information=json_data)
+        if payment_notification_detail is not None:
+            return JsonResponse({'status': 'ok', 'message': 'Request processed successfully.'}, status=200)
+        else:
+            # Failed response
+            return JsonResponse({'status': 'failed', 'message': 'Something went wrong.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'failed', 'message': 'Something went wrong.'}, status=400)
+
     
 
 
