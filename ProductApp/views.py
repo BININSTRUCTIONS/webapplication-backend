@@ -47,8 +47,8 @@ def handle_payment_notification(request):
                 payment_receipt.save()
 
                 try:
-                    print(payment_receipt.items.strip().split(" "))
-                    (product, plan) = payment_receipt.items.strip().split(" ")
+                    print(payment_receipt.items.strip().split("-"))
+                    (product, plan) = payment_receipt.items.strip().split("-")
                     company_product = CompanyProduct.objects.get(name=product)
                     subscription_plan = company_product.subscriptionplan_set.get(name=plan, price=float(payment_receipt.amount))
 
@@ -296,7 +296,7 @@ def activate_plan(request):
 
                                     payment_receipt = PaymentReceipt.objects.create(
                                         order_id=order_id,
-                                        items=company_product.name + " " + plan.name,
+                                        items=company_product.name + "-" + plan.name,
                                         currency="USD",
                                         duration="Forever",
                                         amount=plan.price,
@@ -378,7 +378,7 @@ def activate_plan(request):
 
                             payment_receipt = PaymentReceipt.objects.create(
                                 order_id=order_id,
-                                items=company_product.name + " " + plan.name,
+                                items=company_product.name + "-" + plan.name,
                                 currency="USD",
                                 duration="Forever",
                                 amount=plan.price,
