@@ -28,10 +28,13 @@ def handle_payment_notification(request):
         json_data = json.dumps(data)
         payment_receipt = PaymentReceipt.objects.get(order_id=data["order_id"])
 
+        print(data)
+
         if payment_receipt is not None:
             hash_string = settings.PAYHERE_MERCHANT_ID + f"{payment_receipt.order_id}" + ("%.2f" % float(payment_receipt.amount)) + "USD" + hashlib.md5(settings.PAYHERE_MERCHANT_SECRET.encode("UTF-8")).hexdigest().upper()
             hash = hashlib.md5(hash_string.encode("UTF-8")).hexdigest().upper()
-
+            print(hash)
+            print(data["md5sig"])
             if hash == data["md5sig"]:
                 payment_receipt.payment_id = data["payment_id"]
                 payment_receipt.captured_amount = data["captured_amount"]
