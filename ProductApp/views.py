@@ -46,7 +46,7 @@ def handle_payment_notification(request):
                 try:
                     (product, plan) = payment_receipt.items.strip().split(" ")
                     company_product = CompanyProduct.objects.get(name=product)
-                    subscription_plan = company_product.subscriptionplan_set.get(name=plan, price=payment_receipt.amount)
+                    subscription_plan = company_product.subscriptionplan_set.get(name=plan, price=float(payment_receipt.amount))
 
                     try:
                         customer_has_plan = CustomersHavePlans.objects.get(customer=payment_receipt.customer, product=company_product)
