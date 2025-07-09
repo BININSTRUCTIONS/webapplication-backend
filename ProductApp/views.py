@@ -17,7 +17,7 @@ from KeyManager.models import DigitalKey
 
 from datetime import datetime
 
-from ProductApp.models import CompanyProduct, PaymentNotificationDetail, UpgradePlanRequest
+from ProductApp.models import CompanyProduct, PaymentNotificationDetail, UpgradePlanRequest, SubscriptionPlan
 import json
 
 
@@ -29,15 +29,41 @@ def handle_payment_notification(request):
         payment_receipt = PaymentReceipt.objects.get(order_id=data["order_id"])
 
         if payment_receipt is not None:
-            payment_receipt.payment_id = data["payment_id"]
-            payment_receipt.captured_amount = data["captured_amount"]
-            payment_receipt.payhere_amount = data["payhere_amount"]
-            payment_receipt.status_message = data["status_message"]
-            payment_receipt.status_code = data["status_code"]
-            payment_receipt.method = data["method"]
-            # payment_receipt.message_type = data["message_type"]
-            # payment_receipt.subscription_id = data["subscription_id"]
-            payment_receipt.save()
+            hash_string = settings.PAYHERE_MERCHANT_ID + f"{payment_receipt.order_id}" + ("%.2f" % payment_receipt.amount) + "USD" + hashlib.md5(settings.PAYHERE_MERCHANT_SECRET.encode("UTF-8")).hexdigest().upper()
+            hash = hashlib.md5(hash_string.encode("UTF-8")).hexdigest().upper()
+
+            if hash == data["md5sig"]:
+                payment_receipt.payment_id = data["payment_id"]
+                payment_receipt.captured_amount = data["captured_amount"]
+                payment_receipt.payhere_amount = data["payhere_amount"]
+                payment_receipt.status_message = data["status_message"]
+                payment_receipt.status_code = data["status_code"]
+                payment_receipt.method = data["method"]
+                # payment_receipt.message_type = data["message_type"]
+                # payment_receipt.subscription_id = data["subscription_id"]
+                payment_receipt.save()
+
+                try:
+                    (product, plan) = payment_receipt.items.strip().split(" ")
+                    company_product = CompanyProduct.objects.get(name=product)
+                    subscription_plan = company_product.subscriptionplan_set.get(name=plan, price=payment_receipt.amount)
+
+                    try:
+                        customer_has_plan = CustomersHavePlans.objects.get(customer=payment_receipt.customer, product=company_product)
+                        upgrade_plan_request = UpgradePlanRequest.objects.create(
+                                                user=payment_receipt.customer.user,
+                                                current_plan=customer_has_plan.plan,
+                                                subscription_plan=subscription_plan,
+                                                datetime=datetime.now()
+                                            )
+                    except:
+                        customer_has_plan = CustomersHavePlans.objects.create(
+                                    customer=payment_receipt.customer,
+                                    plan=subscription_plan,
+                                    date=datetime.now(),
+                                    product=company_product)
+                except Exception as exception:
+                    print(exception)
 
         payment_notification_detail = PaymentNotificationDetail.objects.create(information=json_data)
         if payment_notification_detail is not None:
@@ -220,6 +246,7 @@ def activate_plan(request):
                     maxKeysAllowed = 2000
                 elif planName == "Enterprise Tier":
                     maxKeysAllowed = 0
+
                 if len(number_of_license_keys_generated) > maxKeysAllowed:
                     response["status"] = "failed"
                     response["message"] = "You are trying to downgrade the subscription plan. but there are many keys generated than the limited key amount of the new plan. Delete keys generated before downgrading the plan."
@@ -240,12 +267,6 @@ def activate_plan(request):
                             isUpgrade = data["isUpgrade"]
                             if isUpgrade:
                                 if customer_has_plan.plan != plan:
-                                    upgrade_plan_request = UpgradePlanRequest.objects.create(
-                                            user=request.user,
-                                            current_plan=customer_has_plan.plan,
-                                            subscription_plan=plan,
-                                            datetime=datetime.now()
-                                        )
                                     
                                     now = datetime.now()
                                     order_id = f"REC-{company_product.id}{plan.id}{now.year}{now.month}{now.day}{now.hour}{now.minute}{now.second}{now.microsecond}"
@@ -327,11 +348,6 @@ def activate_plan(request):
                             pass
                     except Exception as error:
                         print(error)
-                        customer_has_plan = CustomersHavePlans.objects.create(
-                            customer=customer,
-                            plan=plan,
-                            date=datetime.now(),
-                            product=company_product)
                         
                         if plan.is_free == False:
                             now = datetime.now()
