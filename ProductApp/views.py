@@ -259,7 +259,7 @@ def activate_plan(request):
                     return Response(response)
                 
                 payment_data = {}
-                payment_data["sandbox"] = True
+                payment_data["sandbox"] = False
 
                 recurring_period = "Month"
                 if plan.term == "y":
