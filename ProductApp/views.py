@@ -314,8 +314,8 @@ def activate_plan(request):
 
                                         response["launchPayment"] = plan.price >= 1
 
-                                    customer_has_plan.plan = plan
-                                    customer_has_plan.save()
+                                    # customer_has_plan.plan = plan
+                                    # customer_has_plan.save()
 
                                     response["status"] = "ok"
 
