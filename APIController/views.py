@@ -51,13 +51,15 @@ def generate_key_manager_api_key(request):
         if customer_has_plan:
             api_key = APIKey.objects.create(
                 api_key=key,
-                customers_have_plans=customer_has_plan
+                customers_have_plans=customer_has_plan,
+
             )
 
         if api_key is not None:
             response["key"] = key
             response["status"] = "ok"
     except Exception as e:
+        print("Error generating an API Key")
         print(e)
 
     return Response(response)
