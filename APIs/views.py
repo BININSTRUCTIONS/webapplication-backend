@@ -82,7 +82,7 @@ def get_subscribed_apis(request):
         subscribed_plans = customer.customershaveplans_set.all()
         data = []
         for plan in subscribed_plans:
-            subscribed_plan = plan.plans
+            subscribed_plan = plan.plan
             product = subscribed_plan.product
             api_information = subscribed_plan.api_information
 
