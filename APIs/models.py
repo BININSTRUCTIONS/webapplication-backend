@@ -24,3 +24,4 @@ class APIKey(models.Model):
     remaining_requests = models.IntegerField(null=True, blank=True)
     requests_made = models.IntegerField(null=True, blank=True)
     customers_have_plans = models.ForeignKey(CustomersHavePlans, on_delete=models.CASCADE, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
