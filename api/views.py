@@ -39,6 +39,8 @@ from django.conf import settings
 
 from requests.auth import HTTPBasicAuth
 
+from .models import Review
+
 
 # Create your views here.
 @api_view(["POST"])
@@ -887,7 +889,7 @@ def get_project_chat(request):
 
                 message_info = {
                     "id": message.id,
-                    "date_time": str(message.datetime),
+                    "datetime": str(message.datetime),
                     "message": message.text,
                     "media": media_url,
                     "self": isSelf,
@@ -1144,6 +1146,7 @@ def place_order(request):
         status = "ok"
 
     return Response({"status": status})
+
 
 
 @api_view(["GET"])
@@ -1593,96 +1596,98 @@ def update_product_plan_information(request):
     try:
         print(data)
         productID = data["productID"]
-        planID = data["selectedPlanID"]
 
         saas_product = CompanyProduct.objects.get(id=productID)
-        plan = SubscriptionPlan.objects.get(id=planID)
-
-        plan.product=saas_product
-
-        created_items = []
 
         try:
             name = data["name"]
-            plan.name=name
+            saas_product.name=name
         except:
             pass
 
         try:
-            price = data["price"]
-            plan.price=price
-        except:
-            pass
+            planID = data["selectedPlanID"]
+            plan = SubscriptionPlan.objects.get(id=planID)
 
-        try:
-            term = data["term"]
-            plan.term=term
-        except:
-            pass
+            plan.product=saas_product
 
-        try:
-            is_recurring = data["is_recurring"]
-            plan.is_recurring=is_recurring
-        except:
-            pass
+            created_items = []
 
-        try:
-            is_free = data["isFree"]
-            plan.is_free=is_free
-        except:
-            pass
+            try:
+                price = data["price"]
+                plan.price=price
+            except:
+                pass
 
-        try:
-            items = data["newFeaturesToAdd"]
-            print(items)
-            itemsToDelete = data["featuresToDelete"]
+            try:
+                term = data["term"]
+                plan.term=term
+            except:
+                pass
 
-            if len(itemsToDelete) > 0:
-                for plan_item in plan.subscriptionplanitem_set.all():
-                    if itemsToDelete.__contains__(plan_item.id):
-                        plan_item.delete()
+            try:
+                is_recurring = data["is_recurring"]
+                plan.is_recurring=is_recurring
+            except:
+                pass
 
-            if plan is not None:
-                plan_items = plan.subscriptionplanitem_set.all()
-                for item in items:
-                    if len(plan_items) > 0:
-                        for plan_item in plan.subscriptionplanitem_set.all():
-                            # print(dir(item))
-                            if plan_item.item != item["content"]:
-                                plan_feature = SubscriptionPlanItem.objects.create(
-                                    item=item['content'],
-                                    plan=plan
-                                )
+            try:
+                is_free = data["isFree"]
+                plan.is_free=is_free
+            except:
+                pass
 
-                                created_items.append({
-                                    "id": plan_feature.id,
-                                    "item": plan_feature.item
-                                })
-                    else:
-                        plan_feature = SubscriptionPlanItem.objects.create(
-                            item=item['content'],
-                            plan=plan
-                        )
+            try:
+                items = data["newFeaturesToAdd"]
+                print(items)
+                itemsToDelete = data["featuresToDelete"]
 
-                        created_items.append({
-                            "id": plan_feature.id,
-                            "item": plan_feature.item
-                        })
-                    print("plan edited successfully!")
-        except Exception as e:
-            print(e)
-            pass
-        plan.save()
+                if len(itemsToDelete) > 0:
+                    for plan_item in plan.subscriptionplanitem_set.all():
+                        if itemsToDelete.__contains__(plan_item.id):
+                            plan_item.delete()
+
+                if plan is not None:
+                    plan_items = plan.subscriptionplanitem_set.all()
+                    for item in items:
+                        if len(plan_items) > 0:
+                            for plan_item in plan.subscriptionplanitem_set.all():
+                                # print(dir(item))
+                                if plan_item.item != item["content"]:
+                                    plan_feature = SubscriptionPlanItem.objects.create(
+                                        item=item['content'],
+                                        plan=plan
+                                    )
+
+                                    created_items.append({
+                                        "id": plan_feature.id,
+                                        "item": plan_feature.item
+                                    })
+                        else:
+                            plan_feature = SubscriptionPlanItem.objects.create(
+                                item=item['content'],
+                                plan=plan
+                            )
+
+                            created_items.append({
+                                "id": plan_feature.id,
+                                "item": plan_feature.item
+                            })
+                        response["items"] = created_items
+                        print("plan edited successfully!")
+            except Exception as e:
+                print(e)
+                pass
+            plan.save()
+        except Exception as exception:
+            print(exception)
+        saas_product.save()
         response["status"] = "ok"
-        response["items"] = created_items
     except Exception as e:
         print(e)
         pass
 
     return Response(response)
-
-
-set_api_info_for_plan
 
 
 @api_view(["POST"])
@@ -1759,6 +1764,45 @@ def add_product_update(request):
         dependency_storage_system.save(dependency.name, dependency)
 
     response["status"] = "ok"
+    return Response(response)
+
+
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def create_review(request):
+    response = {"status": "failed"}
+    data = request.data
+    
+    try:
+        review = Review.objects.create(user=request.user, review=data["reviewContent"])
+        if review is not None:
+            response["status"] = "ok"
+    except:
+        pass
+
+    return Response(response)
+
+
+@api_view(["GET"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([])
+def get_reviews(request):
+    response = {"status": "failed"}
+
+    reviews = []
+    try:
+        for review in Review.objects.all():
+            reviews.append({
+                "review": review.review,
+                "user": review.user.first_name + " " + review.user.last_name
+            })
+        response["status"] = "ok"
+    except:
+        pass
+
+    response["reviews"] = reviews
+
     return Response(response)
 
 
@@ -2164,4 +2208,31 @@ def approve_plan_upgrade_requests(request):
         pass
     return Response(response)
 
+
+@api_view(["GET"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAdminUser])
+def get_lead_information(request):
+    response = {"status": "failed"}
+
+    information = {}
+    for reservedSpot in ReservedSpot.objects.all():
+        if information.keys().__contains__(reservedSpot.product.name):
+            information[reservedSpot.product.name].append({
+                "id": reservedSpot.user.id,
+                "firstName": reservedSpot.user.first_name,
+                "lastName": reservedSpot.user.last_name,
+                "email": reservedSpot.user.email
+            })
+        else:
+            information[reservedSpot.product.name] = [{
+                "id": reservedSpot.user.id,
+                "firstName": reservedSpot.user.first_name,
+                "lastName": reservedSpot.user.last_name,
+                "email": reservedSpot.user.email
+            }]
+
+    response["leadInfo"] = information
+    response["status"] = "ok"
+    return Response(response)
 

@@ -42,12 +42,15 @@ urlpatterns = [
     path("admin/password-reset-emails/get", views.get_password_reset_email),
     path("admin/plan-upgrade-requests/get", views.get_plan_upgrade_requests),
     path("admin/plan-upgrade-requests/approve", views.approve_plan_upgrade_requests),
+    path("admin/leads", views.get_lead_information),
     
     path("user/product/payment/complete", views.complete_order),
     path("user/orders/license/keys/get/all", views.get_license_keys),
     path("user/orders/license/key/validate", views.validate_license),
     path("user/apis/subscribed", views.get_subscribed_apis),
     path("user/payment-receipts/get", views.get_payment_receipts),
+    path("user/review/create", views.create_review),
+    path("user/review/get", views.get_reviews),
 
     path("products/get/all", views.get_all_products),
     path("product/download", views.download_file),

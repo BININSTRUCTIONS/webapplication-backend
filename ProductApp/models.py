@@ -10,6 +10,8 @@ class CompanyProduct(models.Model):
     name = models.CharField(max_length=50, null=True, blank=True)
     description = models.TextField(max_length=200, null=True, blank=True)
     date = models.DateField(null=True, blank=True)
+    offer_early_access = models.BooleanField(default=False)
+    landing_page = models.CharField(max_length=256, null=True, blank=True)
 
 
 class SubscriptionPlan(models.Model):
@@ -52,3 +54,17 @@ class Invoice(models.Model):
 class PaymentNotificationDetail(models.Model):
     id = models.AutoField(primary_key=True)
     information = models.TextField(null=True, blank=True)
+
+
+class ReservedSpot(models.Model):
+    id = models.AutoField(primary_key=True)
+    product = models.ForeignKey(CompanyProduct, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+
+class DemoRequest(models.Model):
+    id = models.AutoField(primary_key=True)
+    product = models.ForeignKey(CompanyProduct, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_complete = models.BooleanField(default=False)
+    date_time = models.DateTimeField(null=True, blank=True)

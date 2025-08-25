@@ -17,8 +17,21 @@ from KeyManager.models import DigitalKey
 
 from datetime import datetime
 
-from ProductApp.models import CompanyProduct, PaymentNotificationDetail, UpgradePlanRequest, SubscriptionPlan
+from ProductApp.models import CompanyProduct, PaymentNotificationDetail, UpgradePlanRequest, SubscriptionPlan, ReservedSpot, DemoRequest
 import json
+
+
+
+def reserve_spot(product, user):
+    company_product = CompanyProduct.objects.get(name=product)
+    reserved_spot = ReservedSpot.objects.create(product=company_product, user=user)
+    return reserved_spot
+
+
+def register_for_a_demo(product, user):
+    company_product = CompanyProduct.objects.get(name=product)
+    reserved_spot = DemoRequest.objects.create(product=company_product, user=user)
+    return reserved_spot
 
 
 @csrf_exempt
@@ -455,3 +468,127 @@ def get_activated_plans(request):
             # print(exception)
             pass
     return Response(response)
+
+
+
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def reserve_spot_for_realtag(request):
+    response = {"status": "ok"}
+    try:
+        product_name = "Realtag"
+        reserved_spot = reserve_spot(product_name, request.user)
+        if reserved_spot is not None:
+            response["status"] = "ok"
+    except Exception as e:
+        print(e)
+    return Response(response)
+
+
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def assign_for_early_access(request, productName):
+    response = {"status": "failed"}
+    try:
+        user = request.user
+        reservedSpot = reserve_spot(productName, user)
+        if reservedSpot is not None:
+            response["status"] = "ok"
+    except Exception as e:
+        print(e)
+    return Response(response)
+
+
+
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def book_a_demo(request, productName):
+    response = {"status": "failed"}
+    try:
+        user = request.user
+        demoRequest = register_for_a_demo(productName, user)
+        if demoRequest is not None:
+            response["status"] = "ok"
+    except Exception as e:
+        print(e)
+    return Response(response)
+
+
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def get_early_adoptions(request):
+    response = {"status": "failed"}
+    
+    user = request.user
+    earlyAdoptions = []
+    if not user.is_superuser:
+        for reservation in ReservedSpot.objects.filter(user=user):
+            earlyAdoptions.append({
+                "id": reservation.product.id,
+                "name": reservation.product.name
+            })
+    else:
+        for reservation in ReservedSpot.objects.all():
+            earlyAdoptions.append({
+                "id": reservation.product.id,
+                "name": reservation.product.name,
+                "user": reservation.user.first_name + " " + reservation.user.last_name
+            })
+
+    response["earlyAdoptions"] = earlyAdoptions
+    response["status"] = "ok"
+
+    return Response(response)
+
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])    
+def get_demo_requests(request):
+    response = {"status": "failed"}
+    user = request.user
+    demoRequests = []
+    if not user.is_superuser:
+        for demo in DemoRequest.objects.filter(user=user):
+            demoRequests.append({
+                "id": demo.product.id,
+                "name": demo.product.name
+            })
+    else:
+        for demo in DemoRequest.objects.all():
+            demoRequests.append({
+                "id": demo.id,
+                "name": demo.product.name,
+                "user": demo.user.first_name + " " + demo.user.last_name
+            })
+
+    response["demoRequests"] = demoRequests
+    response["status"] = "ok"
+    return Response(response)
+
+
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def edit_demo_request(request):
+    response = {"status": "failed"}
+    try:
+        data = request.data
+        print(data)
+        demoID = data["demoID"]
+        demoRequest = DemoRequest.objects.get(id=int(demoID))
+        if demoRequest is not None:
+            try:
+                link = data["link"]
+                demoRequest.link = link
+                demoRequest.save()
+                response["status"] = "ok"
+            except:
+                pass
+    except Exception as e:
+        print(e)
+    return Response(response)
+    

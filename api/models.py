@@ -155,10 +155,9 @@ class Message(models.Model):
     text = models.TextField(max_length=1024, default="")
     media = models.FileField(null=True, blank=True)
     datetime = models.DateTimeField(null=True, blank=True)
-    user = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True)
-    project_discussion = models.ForeignKey(
-        ProjectDiscussion, on_delete=models.CASCADE, null=True, blank=True
-    )
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True) # sender of the message
+    project_discussion = models.ForeignKey(ProjectDiscussion, on_delete=models.CASCADE, null=True, blank=True)
+    is_seen = models.BooleanField(default=False)
 
 
 class Admin(models.Model):
@@ -280,3 +279,11 @@ class PaymentReceipt(models.Model):
     amount = models.CharField(max_length=100, null=True, blank=True)
     date_of_payment = models.DateField(null=True)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True)
+
+
+
+class Review(models.Model):
+    id = models.AutoField(primary_key=True)
+    userName = models.CharField(max_length=50, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    review = models.TextField(null=True, blank=True)
