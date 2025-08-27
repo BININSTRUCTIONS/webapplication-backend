@@ -76,6 +76,7 @@ def logIn(request):
                     except Exception as _e:
                         print(_e)
                         pass
+                    print(e)
                     print("user is not an employee")
                 print(type_)
                 refresh = RefreshToken.for_user(user)
@@ -372,6 +373,11 @@ def get_user_information(request):
 
     response["orderInformation"] = order_information
     response["projectInformation"] = project_information
+
+    profileImage = customer.profile_image
+    if profileImage is not None:
+        profileImage = settings.DOMAIN + profileImage.url
+        response["profileImage"] = profileImage
 
     accountInformation = {
         "firstName": user.first_name,
@@ -2233,6 +2239,45 @@ def get_lead_information(request):
             }]
 
     response["leadInfo"] = information
+    response["status"] = "ok"
+    return Response(response)
+
+
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def update_profile_information(request):
+    response = {"status": "failed"}
+
+    user = request.user
+
+    try:
+        data = request.data
+        first_name = data["firstName"]
+        last_name = data["lastName"]
+        username = data["userName"]
+
+        user.first_name = first_name
+        user.last_name = last_name
+        user.username = username
+        user.save()
+    except Exception as e:
+        try:
+            files = request.FILES
+            image = files["image"]
+            print(image)
+            try:
+                customer = user.customer
+                customer.profile_image = image
+                customer.save()
+            except:
+                employee = user.employee
+                employee.profile_image = image
+                employee.save()
+            user.save()
+        except:
+            pass
+
     response["status"] = "ok"
     return Response(response)
 

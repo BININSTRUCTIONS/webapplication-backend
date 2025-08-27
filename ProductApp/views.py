@@ -573,7 +573,7 @@ def get_demo_requests(request):
                 "name": demo.product.name,
                 "user": demo.user.first_name + " " + demo.user.last_name,
                 "timezone": demo.timezone,
-                "timezone": demo.date_time,
+                "dateTime": demo.date_time,
                 "url": demo.url,
                 "email": demo.user.email
             })
@@ -596,7 +596,7 @@ def edit_demo_request(request):
         if demoRequest is not None:
             try:
                 link = data["link"]
-                demoRequest.link = link
+                demoRequest.url = link
                 demoRequest.save()
                 response["status"] = "ok"
             except:

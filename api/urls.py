@@ -51,6 +51,7 @@ urlpatterns = [
     path("user/payment-receipts/get", views.get_payment_receipts),
     path("user/review/create", views.create_review),
     path("user/review/get", views.get_reviews),
+    path("user/profile-information/change", views.update_profile_information),
 
     path("products/get/all", views.get_all_products),
     path("product/download", views.download_file),

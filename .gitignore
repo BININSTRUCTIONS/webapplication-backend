@@ -30,11 +30,12 @@ products
 payment-notification.json
 
 # IDE and editor files
-.idea/
+.idea
 
 # Migrations (optional)
 **/migrations/__pycache__/
 **/migrations/*.pyc
+**/migrations/*.py
 
 
 # created files

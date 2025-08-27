@@ -58,6 +58,7 @@ class Employee(models.Model):
     user = models.OneToOneField(User, on_delete=models.DO_NOTHING, null=True)
     designation = models.ForeignKey(Designation, on_delete=models.CASCADE, null=True, blank=True)
     password_reset_code = models.IntegerField(null=True, blank=True)
+    profile_image = models.FileField(upload_to="employees/images", null=True)
     
 
 
@@ -111,6 +112,8 @@ class Customer(models.Model):
     password_reset_code = models.CharField(max_length=6, null=True, blank=True)
     subscription_plans = models.ManyToManyField("ProductApp.SubscriptionPlan", through="CustomersHavePlans")
     subscribed_to_newsletter = models.BooleanField(default=False)
+    profile_image = models.FileField(upload_to="users/images", null=True)
+    password_reset_code = models.IntegerField(null=True, blank=True)
 
 
 class SecurityQuestion(models.Model):
