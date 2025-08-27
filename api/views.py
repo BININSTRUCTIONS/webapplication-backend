@@ -374,10 +374,13 @@ def get_user_information(request):
     response["orderInformation"] = order_information
     response["projectInformation"] = project_information
 
-    profileImage = customer.profile_image
-    if profileImage is not None:
-        profileImage = settings.DOMAIN + profileImage.url
-        response["profileImage"] = profileImage
+    try:
+        profileImage = customer.profile_image
+        if profileImage is not None:
+            profileImage = settings.DOMAIN + profileImage.url
+            response["profileImage"] = profileImage
+    except:
+        pass
 
     accountInformation = {
         "firstName": user.first_name,
