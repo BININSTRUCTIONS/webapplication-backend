@@ -69,3 +69,4 @@ class DemoRequest(models.Model):
     is_complete = models.BooleanField(default=False)
     timezone = models.CharField(max_length=100, null=True, blank=True)
     date_time = models.DateTimeField(null=True, blank=True)
+    url = models.CharField(max_length=200, null=True, blank=True)

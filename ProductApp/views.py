@@ -509,8 +509,14 @@ def book_a_demo(request, productName):
     response = {"status": "failed"}
     try:
         user = request.user
+        data = request.data
         demoRequest = register_for_a_demo(productName, user)
         if demoRequest is not None:
+            dateTime = data["dateTime"]
+            timeZone = data["timezone"]
+            demoRequest.date_time = dateTime
+            demoRequest.timezone = timeZone
+            demoRequest.save()
             response["status"] = "ok"
     except Exception as e:
         print(e)
@@ -556,8 +562,9 @@ def get_demo_requests(request):
             demoRequests.append({
                 "id": demo.product.id,
                 "name": demo.product.name,
-                "timezone": demo.date_time,
-                "url": demo.date_time
+                "timezone": demo.timezone,
+                "dateTime": demo.date_time,
+                "url": demo.url
             })
     else:
         for demo in DemoRequest.objects.all():
@@ -565,8 +572,9 @@ def get_demo_requests(request):
                 "id": demo.id,
                 "name": demo.product.name,
                 "user": demo.user.first_name + " " + demo.user.last_name,
+                "timezone": demo.timezone,
                 "timezone": demo.date_time,
-                "url": demo.date_time,
+                "url": demo.url,
                 "email": demo.user.email
             })
 
