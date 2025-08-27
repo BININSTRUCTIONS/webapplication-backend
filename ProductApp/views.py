@@ -555,14 +555,19 @@ def get_demo_requests(request):
         for demo in DemoRequest.objects.filter(user=user):
             demoRequests.append({
                 "id": demo.product.id,
-                "name": demo.product.name
+                "name": demo.product.name,
+                "timezone": demo.date_time,
+                "url": demo.date_time
             })
     else:
         for demo in DemoRequest.objects.all():
             demoRequests.append({
                 "id": demo.id,
                 "name": demo.product.name,
-                "user": demo.user.first_name + " " + demo.user.last_name
+                "user": demo.user.first_name + " " + demo.user.last_name,
+                "timezone": demo.date_time,
+                "url": demo.date_time,
+                "email": demo.user.email
             })
 
     response["demoRequests"] = demoRequests

@@ -67,4 +67,5 @@ class DemoRequest(models.Model):
     product = models.ForeignKey(CompanyProduct, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     is_complete = models.BooleanField(default=False)
+    timezone = models.CharField(max_length=100, null=True, blank=True)
     date_time = models.DateTimeField(null=True, blank=True)
