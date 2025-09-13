@@ -20,7 +20,7 @@ from django.conf import settings
 
 # Create your views here.
 @api_view(["POST"])
-@authentication_classes([])
+@authentication_classes([JWTAuthentication])
 @permission_classes([AllowAny])
 def customer_service_chat_request(request):
     response = {"status": "failed"}
@@ -53,8 +53,18 @@ def customer_service_chat_request(request):
                 customer_service_chat = CustomerServiceChat.objects.create(user=user)
 
         if customer_service_chat is not None:
+            print(data)
+            print(user)
+            print(anonymous_user)
+            print(customer_service_chat)
             response["chat_id"] = customer_service_chat.id
             response["status"] = "ok"
+
+            notification = notification.objects.create(
+                heading="New chat request",
+                content="New User has started a chat",
+                user=User.objects.get(username="binins-admin")
+            )
     except:
         pass
     return Response(response)
@@ -106,6 +116,11 @@ def send_message_to_customer_service(request):
                 datetime=datetime.datetime.now(), 
                 customer_service_chat=customer_service_chat
                 )
+            notification = notification.objects.create(
+                heading="New Message Received",
+                content=message,
+                user=User.objects.get(username="binins-admin")
+            )
         else:
             customer_service_message = CustomerServiceMessage.objects.create(
                 text=message, 

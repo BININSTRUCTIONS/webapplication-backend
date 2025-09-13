@@ -14,6 +14,12 @@ class CompanyProduct(models.Model):
     landing_page = models.CharField(max_length=256, null=True, blank=True)
 
 
+class Resource(models.Model):
+    id = models.AutoField(primary_key=True)
+    resource = models.FileField(null=True, blank=True)
+    downloaded_count = models.IntegerField(default=0)
+
+
 class SubscriptionPlan(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=15, null=True, blank=True)

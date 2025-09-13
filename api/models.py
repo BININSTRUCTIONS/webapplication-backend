@@ -290,3 +290,10 @@ class Review(models.Model):
     userName = models.CharField(max_length=50, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     review = models.TextField(null=True, blank=True)
+
+
+class Notification(models.Model):
+    id = models.AutoField(primary_key=True)
+    heading = models.CharField(max_length=50)
+    content = models.TextField(max_length=250)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
