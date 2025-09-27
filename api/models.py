@@ -281,6 +281,7 @@ class PaymentReceipt(models.Model):
     duration = models.CharField(max_length=100, null=True, blank=True)
     amount = models.CharField(max_length=100, null=True, blank=True)
     date_of_payment = models.DateField(null=True)
+    validated = models.BooleanField(default=False)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True)
 
 
