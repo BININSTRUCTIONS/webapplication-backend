@@ -112,7 +112,6 @@ def joinWaitingList(request, productName):
                     if payUpfront and selectedPlan.isExclusive:
                         now = datetime.now()
                         orderID = f"REC-{product.id}{selectedPlan.id}{now.year}{now.month}{now.day}{now.hour}{now.minute}{now.second}{now.microsecond}"
-                        payment_data["sandbox"] = True
                         payment_data["merchant_id"] = settings.PAYHERE_MERCHANT_ID
                         payment_data["return_url"] = "https://www.bininstructions.com/payment-status"
                         payment_data["cancel_url"] = "https://www.bininstructions.com/payment-canceled"
