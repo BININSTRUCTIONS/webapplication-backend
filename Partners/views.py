@@ -115,7 +115,7 @@ def joinWaitingList(request, productName):
                         payment_data["merchant_id"] = settings.PAYHERE_MERCHANT_ID
                         payment_data["return_url"] = "https://www.bininstructions.com/payment-status"
                         payment_data["cancel_url"] = "https://www.bininstructions.com/payment-canceled"
-                        payment_data["notify_url"] = "https://api.bininstructions.com/api/v1/partners/product/payment-status/notify"
+                        payment_data["notify_url"] = "https://api.bininstructions.com/api/v1/partners/products/payment-status/notify"
                         payment_data["first_name"] = name
                         payment_data["last_name"] = ""
                         payment_data["email"] = email
