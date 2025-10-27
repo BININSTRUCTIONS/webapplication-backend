@@ -27,6 +27,10 @@ from datetime import datetime
 import json
 
 
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+
 
 @csrf_exempt
 def handlePartnershipProductPaymentNotification(request):
@@ -193,6 +197,13 @@ def sendMessage(request, productName):
                 product=product
             )
             if message is not None:
+                async_to_sync(get_channel_layer().group_send)(
+                    "adminNotificationUpdate",
+                    {
+                        "type": "notify",
+                        "message": "You got a message regarding Product Amplora"
+                    }
+                )
                 response["status"] = "ok"
     except Exception as e:
         print(e)

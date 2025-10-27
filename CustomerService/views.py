@@ -18,6 +18,9 @@ import datetime
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
 # Create your views here.
 @api_view(["POST"])
 @authentication_classes([JWTAuthentication])
@@ -31,9 +34,13 @@ def customer_service_chat_request(request):
     anonymous_user = None
     customer_service_chat = None
 
+    username = None
+
     try:
         user = User.objects.get(email=customer_email)
+        username = user.username
     except:
+        username = "Unregistered user"
         try:
             anonymous_user = AnonymousUser.objects.get(email=customer_email)
         except:
@@ -41,6 +48,7 @@ def customer_service_chat_request(request):
 
 
     try:
+        
         if user is None:
             try:
                 customer_service_chat = CustomerServiceChat.objects.get(anonymous_user=anonymous_user)
@@ -59,6 +67,24 @@ def customer_service_chat_request(request):
             print(customer_service_chat)
             response["chat_id"] = customer_service_chat.id
             response["status"] = "ok"
+
+            async_to_sync(get_channel_layer().group_send)(
+                "adminNotificationUpdate",
+                {
+                    "type": "notify",
+                    "message": "User started a chat"
+                }
+            )
+
+            async_to_sync(get_channel_layer().group_send)(
+                "adminChats",
+                {
+                    "type": "user_started_a_chat",
+                    "message": "user started a chat",
+                    "user": username,
+                    "email": customer_email
+                }
+            )
 
             notification = notification.objects.create(
                 heading="New chat request",
@@ -223,7 +249,7 @@ def get_customer_service_messages(request):
             response["status"] = "ok"
         response["messages"] = messages
 
-    print(response)
+    # print(response)
     return Response(response)
 
 
