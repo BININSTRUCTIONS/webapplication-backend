@@ -78,14 +78,11 @@ def joinWaitingList(request, productName):
 
     try:
         name = data["name"]
-        whatsapp = data["whatsapp"]
         website = data["website"]
         email = data["email"]
-        brandName = data["brandName"]
         jobTitle = data["jobTitle"]
         agreed = data["agreed"]
         payUpfront = data["payUpfront"]
-        selectedPlanID = data["selectedPlan"]
 
         payment_data = {}
         print(data)
@@ -94,7 +91,6 @@ def joinWaitingList(request, productName):
                 product_name=productName)
             print(product)
             print(dir(product))
-            selectedPlan = product.productplan_set.get(id=selectedPlanID)
 
             if product is not None:
                 waitingUser = None
@@ -113,52 +109,77 @@ def joinWaitingList(request, productName):
                     )
 
                 if waitingUser is not None:
-                    if payUpfront and selectedPlan.isExclusive:
-                        now = datetime.now()
-                        orderID = f"REC-{product.id}{selectedPlan.id}{now.year}{now.month}{now.day}{now.hour}{now.minute}{now.second}{now.microsecond}"
-                        payment_data["merchant_id"] = settings.PAYHERE_MERCHANT_ID
-                        payment_data["return_url"] = "https://www.bininstructions.com/payment-status"
-                        payment_data["cancel_url"] = "https://www.bininstructions.com/payment-canceled"
-                        payment_data["notify_url"] = "https://api.bininstructions.com/api/v1/partners/products/payment-status/notify"
-                        payment_data["first_name"] = name
-                        payment_data["last_name"] = ""
-                        payment_data["email"] = email
-                        payment_data["phone"] = None
-                        payment_data["address"] = None
-                        payment_data["city"] = None
-                        payment_data["country"] = None
-                        payment_data["order_id"] = orderID
-                        payment_data["items"] = productName + " " + selectedPlan.planName
-                        payment_data["currency"] = "USD"
-                        # payment_data["recurrence"] = f"1 {recurring_period}"
-                        # payment_data["duration"] = "Forever"
-                        payment_data["amount"] = selectedPlan.price
-                        response["paymentData"] = payment_data
+                    try:
+                        whatsapp = data["whatsapp"]
+                        waitingUser.whatsapp = whatsapp
+                    except:
+                        pass
 
-                        payment_receipt = CollaborationProductPaymentReceipt.objects.create(
-                            order_id=orderID,
-                            items=productName + "-" + selectedPlan.planName,
-                            currency="USD",
-                            duration="Forever",
-                            amount=selectedPlan.price,
-                            date_of_payment=datetime.today(),
-                            customer=waitingUser
-                        )
+                    try:
+                        brandName = data["brandName"]
+                        waitingUser.brandName = brandName
+                    except:
+                        pass
 
-                        if payment_receipt is not None:
-                            hash_string = settings.PAYHERE_MERCHANT_ID + f"{orderID}" + ("%.2f" % selectedPlan.price) + "USD" + hashlib.md5(
-                                settings.PAYHERE_MERCHANT_SECRET.encode("UTF-8")).hexdigest().upper()
-                            hash = hashlib.md5(hash_string.encode(
-                                "UTF-8")).hexdigest().upper()
-                            payment_data["hash"] = hash
+                    waitingUser.save()
+                    selectedPlan = None
+                    try:
+                        selectedPlanID = data["selectedPlan"]
+                        selectedPlan = product.productplan_set.get(id=selectedPlanID)
 
-                            if selectedPlan.price >= 1:
-                                response["paymentData"] = payment_data
+                        if payUpfront and selectedPlan.isExclusive:
+                            now = datetime.now()
+                            orderID = f"REC-{product.id}{selectedPlan.id}{now.year}{now.month}{now.day}{now.hour}{now.minute}{now.second}{now.microsecond}"
+                            payment_data["merchant_id"] = settings.PAYHERE_MERCHANT_ID
+                            payment_data["return_url"] = "https://www.bininstructions.com/payment-status"
+                            payment_data["cancel_url"] = "https://www.bininstructions.com/payment-canceled"
+                            payment_data["notify_url"] = "https://api.bininstructions.com/api/v1/partners/products/payment-status/notify"
+                            payment_data["first_name"] = name
+                            payment_data["last_name"] = ""
+                            payment_data["email"] = email
+                            payment_data["phone"] = None
+                            payment_data["address"] = None
+                            payment_data["city"] = None
+                            payment_data["country"] = None
+                            payment_data["order_id"] = orderID
+                            payment_data["items"] = productName + " " + selectedPlan.planName
+                            payment_data["currency"] = "USD"
+                            # payment_data["recurrence"] = f"1 {recurring_period}"
+                            # payment_data["duration"] = "Forever"
+                            payment_data["amount"] = selectedPlan.price
+                            response["paymentData"] = payment_data
 
-                            response["launchPayment"] = selectedPlan.price >= 1
+                            payment_receipt = CollaborationProductPaymentReceipt.objects.create(
+                                order_id=orderID,
+                                items=productName + "-" + selectedPlan.planName,
+                                currency="USD",
+                                duration="Forever",
+                                amount=selectedPlan.price,
+                                date_of_payment=datetime.today(),
+                                customer=waitingUser
+                            )
+
+                            if payment_receipt is not None:
+                                hash_string = settings.PAYHERE_MERCHANT_ID + f"{orderID}" + ("%.2f" % selectedPlan.price) + "USD" + hashlib.md5(
+                                    settings.PAYHERE_MERCHANT_SECRET.encode("UTF-8")).hexdigest().upper()
+                                hash = hashlib.md5(hash_string.encode(
+                                    "UTF-8")).hexdigest().upper()
+                                payment_data["hash"] = hash
+
+                                if selectedPlan.price >= 1:
+                                    response["paymentData"] = payment_data
+
+                                response["launchPayment"] = selectedPlan.price >= 1
+                    except:
+                        pass
 
                     print("adding products")
-                    waitingUserHasProduct = WaitingUserHasProduct.objects.create(product=product, waiting_user=waitingUser, plan=selectedPlan)
+                    waitingUserHasProduct = None
+
+                    if selectedPlan is not None:
+                        waitingUserHasProduct = WaitingUserHasProduct.objects.create(product=product, waiting_user=waitingUser, plan=selectedPlan)
+                    else:
+                        waitingUserHasProduct = WaitingUserHasProduct.objects.create(product=product, waiting_user=waitingUser)
                     if waitingUserHasProduct is not None:
                         #if waitingUserHasProduct is not None:
                         # waitingUser.product.add(product)

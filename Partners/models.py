@@ -29,7 +29,7 @@ class CollaborationProductHasParty(models.Model):
 class WaitingUser(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
-    whatsapp = models.CharField(max_length=12)
+    whatsapp = models.CharField(max_length=12, null=True, blank=True)
     website = models.CharField(max_length=255)
     email = models.EmailField()
     brandName = models.CharField(max_length=255, null=True, blank=True)
@@ -42,7 +42,7 @@ class WaitingUserHasProduct(models.Model):
     id = models.AutoField(primary_key=True)
     product = models.ForeignKey(CollaborationProduct, on_delete=models.CASCADE)
     waiting_user = models.ForeignKey(WaitingUser, on_delete=models.CASCADE)
-    plan = models.ForeignKey(ProductPlan, on_delete=models.CASCADE)
+    plan = models.ForeignKey(ProductPlan, on_delete=models.CASCADE, null=True, blank=True)
 
 
 class CollaborationProductMessage(models.Model):
